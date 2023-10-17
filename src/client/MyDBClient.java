@@ -21,4 +21,15 @@ public class MyDBClient extends Client {
         super();
         this.nodeConfig = nodeConfig;
     }
+
+    @Override
+    public void callbackSend(InetSocketAddress isa, String request, Callback
+            callback){
+        //TODO
+    }
+
+    @Override
+    public void handleResponse(byte[] bytes, NIOHeader header){
+        //TODO
+    }
 }
