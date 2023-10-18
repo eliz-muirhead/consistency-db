@@ -1,15 +1,13 @@
 package client;
 
-import edu.umass.cs.nio.AbstractBytePacketDemultiplexer;
-import edu.umass.cs.nio.MessageNIOTransport;
 import edu.umass.cs.nio.interfaces.NodeConfig;
 import edu.umass.cs.nio.nioutils.NIOHeader;
-import server.SingleServer;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
+import java.util.concurrent.CountDownLatch;
+
 
 /**
  * This class should implement your DB client.
@@ -25,9 +23,29 @@ public class MyDBClient extends Client {
 
     @Override
     public void callbackSend(InetSocketAddress isa, String request, Callback
-            callback){
+            callback) throws IOException {
+
         NIOHeader header = new NIOHeader(isa, isa);
-        callback.handleResponse(request.getBytes(StandardCharsets.UTF_8), header);
+
+        Thread sendProcess = new Thread(() -> {
+            try {
+                send(isa, request);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        });
+
+        Thread callbackProcess = new Thread(() -> {
+            callback.handleResponse(request.getBytes(StandardCharsets.UTF_8), header);
+        });
+
+        try {
+            sendProcess.start();
+            Thread.sleep(1000);
+            callbackProcess.start();
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
